@@ -1,18 +1,34 @@
 FROM ubuntu:22.04
- 
-# Install dependencies
-RUN apt update && \
-    apt install -y software-properties-common wget curl git openssh-client tmate python3 && \
-    apt clean
- 
-# Create a dummy index page to keep the service alive
-RUN mkdir -p /app && echo "Tmate Session Running..." > /app/index.html
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && \
+    apt-get install -y \
+    xfce4 \
+    xfce4-goodies \
+    tightvncserver \
+    novnc \
+    websockify \
+    && apt-get clean
+
 WORKDIR /app
- 
-# Expose a fake web port to trick Railway into keeping container alive
-EXPOSE 6080
- 
-# Start a dummy Python web server to keep Railway service active
-# and start tmate session
-CMD python3 -m http.server 6080 & \
-    tmate -F
+
+COPY <<'EOF' /app/start.sh
+#!/bin/bash
+
+VNC_PASSWORD="123456"
+
+mkdir -p ~/.vnc
+echo "$VNC_PASSWORD" | vncpasswd -f > ~/.vnc/passwd
+chmod 600 ~/.vnc/passwd
+
+vncserver :1 -geometry 1280x720 -depth 24
+
+websockify --web /usr/share/novnc/ 8080 localhost:5901
+EOF
+
+RUN chmod +x /app/start.sh
+
+EXPOSE 8080
+
+CMD ["/app/start.sh"]
