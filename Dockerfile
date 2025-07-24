@@ -16,20 +16,25 @@ WORKDIR /app
 COPY <<'EOF' /app/start.sh
 #!/bin/bash
 
-# --- PHẦN SỬA LỖI ---
 export USER=root
 export HOME=/root
-# --------------------
-
 VNC_PASSWORD="yourpassword"
 
-mkdir -p ~/.vnc
-echo "$VNC_PASSWORD" | vncpasswd -f > ~/.vnc/passwd
-chmod 600 ~/.vnc/passwd
+mkdir -p /root/.vnc
+echo "$VNC_PASSWORD" | vncpasswd -f > /root/.vnc/passwd
+chmod 600 /root/.vnc/passwd
+
+cat <<'EOT' > /root/.vnc/xstartup
+#!/bin/bash
+unset SESSION_MANAGER
+unset DBUS_SESSION_BUS_ADDRESS
+startxfce4 &
+EOT
+
+chmod +x /root/.vnc/xstartup
 
 vncserver :1 -geometry 1280x720 -depth 24
 
-# Thêm một khoảng chờ nhỏ để VNC server có thời gian khởi động
 sleep 2
 
 websockify --web /usr/share/novnc/ 8080 localhost:5901
