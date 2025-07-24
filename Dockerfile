@@ -9,6 +9,7 @@ RUN apt-get update && \
     tightvncserver \
     novnc \
     websockify \
+    dbus-x11 \
     && apt-get clean
 
 WORKDIR /app
@@ -28,7 +29,7 @@ cat <<'EOT' > /root/.vnc/xstartup
 #!/bin/bash
 unset SESSION_MANAGER
 unset DBUS_SESSION_BUS_ADDRESS
-startxfce4 &
+dbus-launch startxfce4 &
 EOT
 
 chmod +x /root/.vnc/xstartup
