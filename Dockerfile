@@ -16,13 +16,21 @@ WORKDIR /app
 COPY <<'EOF' /app/start.sh
 #!/bin/bash
 
-VNC_PASSWORD="123456"
+# --- PHẦN SỬA LỖI ---
+export USER=root
+export HOME=/root
+# --------------------
+
+VNC_PASSWORD="yourpassword"
 
 mkdir -p ~/.vnc
 echo "$VNC_PASSWORD" | vncpasswd -f > ~/.vnc/passwd
 chmod 600 ~/.vnc/passwd
 
 vncserver :1 -geometry 1280x720 -depth 24
+
+# Thêm một khoảng chờ nhỏ để VNC server có thời gian khởi động
+sleep 2
 
 websockify --web /usr/share/novnc/ 8080 localhost:5901
 EOF
