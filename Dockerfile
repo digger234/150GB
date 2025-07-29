@@ -1,48 +1,18 @@
 FROM ubuntu:22.04
-
-ENV DEBIAN_FRONTEND=noninteractive
-
-RUN apt-get update && \
-    apt-get install -y \
-    xfce4 \
-    xfce4-goodies \
-    tightvncserver \
-    novnc \
-    websockify \
-    dbus-x11 \
-    && apt-get clean
-
+ 
+# Install dependencies
+RUN apt update && \
+    apt install -y software-properties-common wget curl git openssh-client tmate python3 && \
+    apt clean
+ 
+# Create a dummy index page to keep the service alive
+RUN mkdir -p /app && echo "Tmate Session Running..." > /app/index.html
 WORKDIR /app
-
-COPY <<'EOF' /app/start.sh
-#!/bin/bash
-
-export USER=root
-export HOME=/root
-VNC_PASSWORD="yourpassword"
-
-mkdir -p /root/.vnc
-echo "$VNC_PASSWORD" | vncpasswd -f > /root/.vnc/passwd
-chmod 600 /root/.vnc/passwd
-
-cat <<'EOT' > /root/.vnc/xstartup
-#!/bin/bash
-unset SESSION_MANAGER
-unset DBUS_SESSION_BUS_ADDRESS
-dbus-launch startxfce4 &
-EOT
-
-chmod +x /root/.vnc/xstartup
-
-vncserver :1 -geometry 1280x720 -depth 24
-
-sleep 2
-
-websockify --web /usr/share/novnc/ 8080 localhost:5901
-EOF
-
-RUN chmod +x /app/start.sh
-
-EXPOSE 8080
-
-CMD ["/app/start.sh"]
+ 
+# Expose a fake web port to trick Railway into keeping container alive
+EXPOSE 6080
+ 
+# Start a dummy Python web server to keep Railway service active
+# and start tmate session
+CMD python3 -m http.server 6080 & \
+    tmate -F
